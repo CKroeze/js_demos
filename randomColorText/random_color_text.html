@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Random Color Text</title>
+  </head>
+
+  <body>
+    
+
+    
+
+
+  </body>
+
+  <script language="javascript">
+
+    
+function randomColor(){
+    //                    R G B
+    //css hex rgb format is "#FFFFFF"
+    //generate a random value between 0 and 255
+    //convert to hex string
+    //pad hex string with a "0" on the left if it is only one digit
+  
+    return "#"
+        + Math.floor((Math.random() * 255)).toString(16).padStart(2,"0")
+        + Math.floor((Math.random() * 255)).toString(16).padStart(2,"0")
+        + Math.floor((Math.random() * 255)).toString(16).padStart(2,"0");
+}
+
+
+
+function randomDarkColor(cutoff = 0.2) {
+    
+    //0 < cutoff and cutoff < 1, lower is darker
+    //                        R G B
+    //css hex rgb format is "#FFFFFF"
+    //random dark color confines each rgb value to between 0 and (255 * cutoff)
+    //generate a random value between 0 and 255
+    //multiply the value by the cutoff
+    //convert to hex string
+    //pad hex string with a "0" on the left if it is only one digit
+    
+    return "#"
+        + Math.floor((Math.random() * 255) * cutoff).toString(16).padStart(2,"0")
+        + Math.floor((Math.random() * 255) * cutoff).toString(16).padStart(2,"0")
+        + Math.floor((Math.random() * 255) * cutoff).toString(16).padStart(2,"0");
+}
+
+function randomLightColor(cutoff = 0.8) {
+    
+    //0 < cutoff and cutoff < 1, higher is lighter
+    //                        R G B
+    //css hex rgb format is "#FFFFFF"
+    //random light color confines each rgb value to between 255 and (255 * cutoff)
+    //generate a random value between 0 and 255
+    //multiply value by (1 - cutoff)
+    //add (cutoff * 255) to the random value
+    //convert to hex string
+    //pad hex string with a "0" on the left if it is only one digit
+
+    return "#"
+        + Math.floor(((Math.random() * 255) * (1.0 - cutoff)) + (cutoff * 255))
+        .toString(16).padStart(2,"0")
+        + Math.floor(((Math.random() * 255) * (1.0 - cutoff)) + (cutoff * 255))
+        .toString(16).padStart(2,"0")
+        + Math.floor(((Math.random() * 255) * (1.0 - cutoff)) + (cutoff * 255))
+        .toString(16).padStart(2,"0");
+}
+
+function randomFullSpectrumColor(cutoff = 0.8) {
+
+    //limit total rgb values to (cutoff * 3 * 255)
+    //distribute total randomly between r,g, and b
+    //this allows limiting overall brightness
+    //without the muddying effect of limiting all 3 values to the same small range
+
+    let total = 0xff*3 * cutoff; //0xff = javascript hex value for 255
+
+    //set first value to a random value between 0 and whichever is smaller, 255, or the total
+    let first =  Math.min(0xFF, total) * Math.random();
+
+    //decrease total by amount assigned to first
+    total -= first;
+
+    //do the same for the second value with the remaining total
+    let second = Math.min(0xFF, total) * Math.random();
+    total -= second;
+
+    //assign all remaining total to third
+    let third = total;
+
+    //if the original cutoff value is large
+    //the third value could have a value greater than 255
+    if(third > 0xFF) {
+
+        //set third value equal to max of 255
+        third = 0xFF;
+        //remainder is amount third value was decreased by
+        let remainder = total - third;
+
+        //apply remainder to second value and if necessary first value
+        if(second + remainder > 0xFF) {
+            remainder -= 0xFF - second;
+            second = 0xFF;
+            first += remainder;
+        }else second += remainder;
+        
+    }
+
+    //randomize order of values to eliminate tendency of first value to be larger, etc..
+    const rgb = randomizeArray([first, second, third]);
+
+    //convert to css hex string, ie #FFFFFF
+    //round each value to integer
+    //convert hex string
+    //if single digit, pad with '0' on left
+    let string = "#";
+    rgb.forEach(v => {
+        string += Math.floor(v).toString(16).padStart(2,"0");
+    });
+
+    return string;
+    
+}
+
+function randomHSLColor(saturation = 85, lightness = 75){
+    
+    return "hsl(" + 360 * Math.random() + ',' +
+        saturation + '%,' + 
+        lightness + '%)';
+}
+
+function randomRangeHSLColor(settings){
+    settings = {minSaturation: 25,
+                maxSaturation: 95,
+                minLightness: 85,
+                maxLightness: 95,
+                ...settings};
+    
+    return "hsl(" + 360 * Math.random() + ',' +
+        (settings.minSaturation +
+         (settings.maxSaturation - settings.minSaturation) * Math.random()) + '%,' + 
+        (settings.minLightness +
+         (settings.maxLightness - settings.minLightness) * Math.random()) + '%)';
+}
+
+  </script>
+  
+</html>
