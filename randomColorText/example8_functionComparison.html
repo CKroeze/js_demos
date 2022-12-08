@@ -11,6 +11,12 @@
     
     <script>
 
+      //we are going to take each of each of the random color functions
+      //and display their results in a row in a table,
+      //with adjustable sliders to
+      //experiment with the parameters.
+      //the entire table will be built in javascript
+      
       
 function makeColorSpan(text, color) {
     const span = document.createElement("span");
@@ -149,16 +155,23 @@ function randomHSLColor(saturation = 100, lightness = 50) {
     
 }
 
+
+	//starting colors for the text background
 let lightColor = "#d3d3d3";
 let darkColor = "#2a2a2a";
 
+	//we will store the cells for the text display to
+	//change their backgrounds when the color inputs are changed
 const lightTds = [];
 const darkTds = [];
 
-const table = document.createElement("table");
 
+const table = document.createElement("table");
+	
+	//the top row will have a text input, two color inputs, and a button to regenerate colors
 const topRow = document.createElement("tr");
 
+	//all rows will be updated when the text input changes
 const textTd = document.createElement("td");
 const textInput = document.createElement("input");
 textInput.value = "Jungle Pedantics";
@@ -192,6 +205,7 @@ darkColorInput.oninput = () => {
     });
 };
 
+	//the refresh button resets all colors without changing text or parameters
 const refreshTd = document.createElement("td");
 const refreshButton = document.createElement("input");
 refreshButton.type = "button";
@@ -204,15 +218,33 @@ refreshTd.append(refreshButton);
 topRow.append(textTd, lightColorTd, darkColorTd, refreshTd);
 
 
+	//each function's row has a label column displaying the function name,
+	//two different color background columns displaying the randomly colored text,
+	//and columns for sliders for any parameters they have
+	
+	//a set function is defined to set the text display using these parameter inputs
+	
+	//the set function generates a randomly colored p element using that row's function
+	//and then clones it twice so that each of the different color backgrounds
+	//will feature the same set of colored letters
+	
+	//each parameter input calls this set function when it is changed
+	
+	//setDisplays is defined at the end and calls all of the row's set functions
+
+	
+	//randomRGBColor
 const randomColorRow = document.createElement("tr");
 const randomColorLabel = document.createElement("td");
 randomColorLabel.append("randomRGBColor");
+	
 const randomColorLight = document.createElement("td");
 randomColorLight.style.background = lightColor;
 lightTds.push(randomColorLight);
 const randomColorDark = document.createElement("td");
 randomColorDark.style.background = darkColor;
 darkTds.push(randomColorDark);
+	
 function setRandomColorDisplay(text) {
     randomColorLight.innerHTML = "";
     randomColorDark.innerHTML = "";
@@ -221,17 +253,23 @@ function setRandomColorDisplay(text) {
     randomColorDark.append(p.cloneNode(true));
     
 }
+	
 randomColorRow.append(randomColorLabel, randomColorLight, randomColorDark);
 
+
+	
+	//randomDarkRGBColor
 const randomDarkColorRow = document.createElement("tr");
 const randomDarkColorLabel = document.createElement("td");
 randomDarkColorLabel.append("randomDarkRGBColor");
+	
 const randomDarkColorLight = document.createElement("td");
 randomDarkColorLight.style.background = lightColor;
 lightTds.push(randomDarkColorLight);
 const randomDarkColorDark = document.createElement("td");
 randomDarkColorDark.style.background = darkColor;
 darkTds.push(randomDarkColorDark);
+	
 const darkCutoffInputTd = document.createElement("td");
 const darkCutoffInput = document.createElement("input");
 darkCutoffInput.type = "range";
@@ -252,17 +290,23 @@ function setRandomDarkColorDisplay(text) {
     randomDarkColorDark.append(p.cloneNode(true));
     
 }
+	
 randomDarkColorRow.append(randomDarkColorLabel, randomDarkColorLight, randomDarkColorDark, darkCutoffInputTd);
 
+	
+
+	//randomLightRGBColor
 const randomLightColorRow = document.createElement("tr");
 const randomLightColorLabel = document.createElement("td");
 randomLightColorLabel.append("randomLightRGBColor");
+	
 const randomLightColorLight = document.createElement("td");
 randomLightColorLight.style.background = lightColor;
 lightTds.push(randomLightColorLight);
 const randomLightColorDark = document.createElement("td");
 randomLightColorDark.style.background = darkColor;
 darkTds.push(randomLightColorDark);
+	
 const lightCutoffInputTd = document.createElement("td");
 const lightCutoffInput = document.createElement("input");
 lightCutoffInput.type = "range";
@@ -283,18 +327,23 @@ function setRandomLightColorDisplay(text) {
     randomLightColorDark.append(p.cloneNode(true));
     
 }
+	
 randomLightColorRow.append(randomLightColorLabel, randomLightColorLight, randomLightColorDark, lightCutoffInputTd);
 
+	
 
+	//randomLimitedRGBColor
 const randomLimitedColorRow = document.createElement("tr");
 const randomLimitedColorLabel = document.createElement("td");
 randomLimitedColorLabel.append("randomLimitedRGBColor");
+	
 const randomLimitedColorLight = document.createElement("td");
 randomLimitedColorLight.style.background = lightColor;
 lightTds.push(randomLimitedColorLight);
 const randomLimitedColorDark = document.createElement("td");
 randomLimitedColorDark.style.background = darkColor;
 darkTds.push(randomLimitedColorDark);
+	
 const limitedCutoffInputTd = document.createElement("td");
 const limitedCutoffInput = document.createElement("input");
 limitedCutoffInput.type = "range";
@@ -315,11 +364,16 @@ function setRandomLimitedColorDisplay(text) {
     randomLimitedColorDark.append(p.cloneNode(true));
     
 }
+	
 randomLimitedColorRow.append(randomLimitedColorLabel, randomLimitedColorLight, randomLimitedColorDark, limitedCutoffInputTd);
 
+
+	
+	//randomHSLColor
 const randomHSLColorRow = document.createElement("tr");
 const randomHSLColorLabel = document.createElement("td");
 randomHSLColorLabel.append("randomHSLColor");
+	
 const randomHSLColorLight = document.createElement("td");
 randomHSLColorLight.style.background = lightColor;
 lightTds.push(randomHSLColorLight);
@@ -359,10 +413,11 @@ function setRandomHSLColorDisplay(text) {
     randomHSLColorDark.append(p.cloneNode(true));
     
 }
+	
 randomHSLColorRow.append(randomHSLColorLabel, randomHSLColorLight, randomHSLColorDark, HSLSaturationInputTd, HSLLightnessInputTd);
 
 
-
+	//add all rows to table and table to body
 table.append(topRow,
 	     randomColorRow,
 	     randomDarkColorRow,
@@ -372,6 +427,7 @@ table.append(topRow,
 
 document.body.append(table);
 
+	//set all rows
 function setDisplays(text) {
     setRandomColorDisplay(text);
     setRandomDarkColorDisplay(text);
@@ -380,6 +436,7 @@ function setDisplays(text) {
     setRandomHSLColorDisplay(text);
     
 }
+	//initialize display
 setDisplays("Jungle Pedantics");
 
 
