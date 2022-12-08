@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Example4: Random Biased Colors</title>
+     
+  </head>
+  
+  <body>
+    
+    <script>
+
+      function makeColorSpan(text, color) {
+	    const span = document.createElement("span");
+	    span.append(text);
+	    span.style.color = color;
+	    return span;
+	}
+      
+      function randomDarkRGBColor(cutoff = 0.3) {
+	//cutoff should be between 0 and 1
+	//limit each value by the cutoff
+	    const red = Math.random() * 255 * cutoff;
+	    const green = Math.random() * 255 * cutoff;
+	    const blue = Math.random() * 255 * cutoff;
+
+	    return `rgb(${red}, ${green}, ${blue})`; 
+	
+	}
+
+	function randomLightRGBColor(cutoff = 0.7) {
+	//cutoff should be between 0 and 1
+	//value will always be at least cutoff * 255
+	//calculate a random value between 0 and (1-cutoff) * 255
+	//add that to minimum value of cutoff * 255
+
+	    const red = Math.random() * 255 * (1 - cutoff) + cutoff * 255
+	    const green = Math.random() * 255 * (1 - cutoff) + cutoff * 255
+	    const blue = Math.random() * 255 * (1 - cutoff) + cutoff * 255
+	
+	    return `rgb(${red}, ${green}, ${blue})`; 
+	}
+
+	function makeColorFnP(text, colorFn, splitOn = " ") {
+	    //this function will be more versatile
+	    //colorFn is any function that returns a color
+
+	    const p = document.createElement('p');
+
+	    text.split(splitOn).forEach(textSegment => {
+
+	        //use our old colored span function, but for the color
+	        //pass the result of calling the colorFn
+	        p.append(makeColorSpan(textSegment, colorFn()), splitOn);
+	
+	    });
+
+	    return p;
+	
+      }
+
+      const darkText = makeColorFnP("Jungle Pedantics", () => randomDarkRGBColor(0.3), "");
+      const lightText = makeColorFnP("Jungle Pedantics", () => randomLightRGBColor(0.7), "");
+
+      document.body.append(darkText,
+                                             lightText);
+    </script>
+    
+  </body>
+
+  
+  
+</html>

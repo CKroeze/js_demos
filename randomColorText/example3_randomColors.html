@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Example3: Random Colors</title>
+     
+  </head>
+  
+  <body>
+    
+    <script>
+
+      function randomRGBColor() {
+	    const red = Math.random() * 255;
+	    const green = Math.random() * 255;
+	    const blue = Math.random() * 255;
+
+	    //using a template literal to format the return string
+	    return `rgb(${red}, ${green}, ${blue})`; 
+	}
+
+	function makeRandomRGBColorSpan(text) {
+	    const span = document.createElement("span");
+	    span.append(text);
+	    span.style.color = randomRGBColor()
+	    return span;
+	}
+
+	function makeMultiRandomRGBColorP(text, splitOn = " ") {
+	    const p = document.createElement('p');
+
+	    text.split(splitOn).forEach(textSegment => {
+	        p.append(makeRandomRGBColorSpan(textSegment), splitOn)
+	    });
+
+	    return p
+	}
+
+      const randomText = makeMultiRandomRGBColorP("Jungle Pedantics", "")
+      document.body.append(randomText);
+      
+    </script>
+    
+  </body>
+
+  
+  
+</html>

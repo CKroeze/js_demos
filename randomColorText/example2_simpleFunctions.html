@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Example1: Simple Functions</title>
+     
+  </head>
+  
+  <body>
+    
+    <script>
+
+        function makeColorSpan(text, color) {
+	    const span = document.createElement("span");
+	    span.append(text);
+	    span.style.color = color;
+	    return span;
+	}
+
+	function makeMultiColorP(text, colors, splitOn = " ") {
+	//colors is an array of html color values
+	//we split the text and assign rotating colors to each segment
+	//default splits on " " i.e. separates words
+	//split on an empty string: ""  to color each character separately
+	
+	    const p = document.createElement("p");
+
+	    text.split(splitOn).forEach((textSegment, i) => {
+	    //we need the index: i to rotate colors
+
+	        //modulo "%" calculates the remainder, so as i increases
+	        //we continue to access values in the colors array
+	        //0 % 2 = 0
+	        //1 % 2 = 1
+	        //2 % 2 = 0
+	        //3 % 2 = 1
+	        //etc...
+	
+	        const color = colors[i % colors.length];
+	        const span = makeColorSpan(textSegment, color);
+
+	        //add the split character back in or you lose the
+	        //spaces in the sentence
+	        p.append(span, splitOn);
+	
+	    })
+
+	    return p;
+	
+	  }
+
+	const wordColors = makeMultiColorP("These words keep changing colors!", ["red", "green", "blue"]);
+	const letterColors = makeMultiColorP("Now every letter is different!", ["purple", "orange", "lightcoral"], "");
+
+	document.body.append(wordColors,
+	                                      letterColors);
+    </script>
+    
+  </body>
+
+  
+  
+</html>

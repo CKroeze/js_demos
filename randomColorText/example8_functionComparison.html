@@ -1,0 +1,394 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Example8: Function Comparison</title>
+     
+  </head>
+  
+  <body>
+    
+    <script>
+
+      
+function makeColorSpan(text, color) {
+    const span = document.createElement("span");
+    span.append(text);
+    span.style.color = color;
+    return span;
+}
+
+function makeColorFnP(text, colorFn, splitOn = " ") {
+    //this function will be more versatile
+    //colorFn is any function that returns a color
+
+    const p = document.createElement('p');
+
+    text.split(splitOn).forEach(textSegment => {
+
+	//use our old colored span function, but for the color
+	//pass the result of calling the colorFn
+	p.append(makeColorSpan(textSegment, colorFn()), splitOn);
+	
+    });
+
+    return p;
+    
+}
+
+function randomRGBColor() {
+    const red = Math.random() * 255;
+    const green = Math.random() * 255;
+    const blue = Math.random() * 255;
+
+    //using a template literal to format the return string
+    return `rgb(${red}, ${green}, ${blue})`; 
+}
+
+function randomDarkRGBColor(cutoff = 0.3) {
+    //cutoff should be between 0 and 1
+    //limit each value by the cutoff
+    const red = Math.random() * 255 * cutoff;
+    const green = Math.random() * 255 * cutoff;
+    const blue = Math.random() * 255 * cutoff;
+
+    return `rgb(${red}, ${green}, ${blue})`; 
+    
+}
+
+function randomLightRGBColor(cutoff = 0.7) {
+    //cutoff should be between 0 and 1
+    //value will always be at least cutoff * 255
+    //calculate a random value between 0 and (1-cutoff) * 255
+    //add that to minimum value of cutoff * 255
+
+    const red = Math.random() * 255 * (1 - cutoff) + cutoff * 255;
+    const green = Math.random() * 255 * (1 - cutoff) + cutoff * 255;
+    const blue = Math.random() * 255 * (1 - cutoff) + cutoff * 255;
+    
+    return `rgb(${red}, ${green}, ${blue})`; 
+}
+
+function randomizeArray(a) {
+    //duplicate array so original is not modified
+    a = a.slice();
+
+    //for each element of the array, starting at the end
+    //swap element with a random earlier element in the array
+    for (let i = a.length - 1; i > 0; i--) {
+	
+	//j = random array index <= i
+	const j = Math.floor(Math.random() * (i + 1));
+
+	//swap a[i] and a[j] in place		      
+	[a[i], a[j]] = [a[j], a[i]];
+
+    }
+    return a;
+}
+
+function randomLimitedRGBColor(cutoff = 0.8) {
+    //limit total rgb values to (cutoff * 3 * 255)
+    //distribute total randomly between r, g, and b
+    //this allows limiting overall brightness
+    //without the muddying effect of limiting all 3 values to the same small range
+
+    let total = 255*3 * cutoff; 
+
+    //set first value to a random value between 0 and whichever is smaller, 255, or the total
+    let first =  Math.min(255, total) * Math.random();
+
+    //decrease total by amount assigned to first
+    total -= first;
+
+    //do the same for the second value with the remaining total
+    let second = Math.min(255, total) * Math.random();
+    total -= second;
+
+    let third = 0;
+    
+    if(total > 255) {
+        //set third value equal to max of 255
+        third = 255;
+        
+        let remainder = total - third;
+        
+        if(second + remainder > 255) { 
+	    //set second to 255 
+	    //reduce remainder by the amount added to second
+            remainder -= 255 - second;
+            second = 255;
+	    //add the rest to first
+            first += remainder;
+	    
+        }else {
+            //otherwise just add the remainder to second
+	    second += remainder;
+            
+	}
+    }else {
+	// otherwise if remaining total is less than 255 just assign
+	// it to third
+	third = total;
+    }
+
+    //randomize order of values to eliminate tendency of first value to be larger, etc..
+    const rgb = randomizeArray([first, second, third]);
+    
+    return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+    
+}
+
+function randomHSLColor(saturation = 100, lightness = 50) {
+    //default values are the unaltered hue
+
+    const hue = Math.random() * 360;
+
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    
+}
+
+let lightColor = "#d3d3d3";
+let darkColor = "#2a2a2a";
+
+const lightTds = [];
+const darkTds = [];
+
+const table = document.createElement("table");
+
+const topRow = document.createElement("tr");
+
+const textTd = document.createElement("td");
+const textInput = document.createElement("input");
+textInput.value = "Jungle Pedantics";
+textInput.oninput = () => {
+    setDisplays(textInput.value);
+};
+textTd.append("text: ", textInput);
+
+const lightColorTd = document.createElement("td");
+const lightColorInput = document.createElement("input");
+lightColorInput.type = "color";
+lightColorInput.value = lightColor;
+lightColorTd.append(lightColorInput);
+lightColorInput.oninput = () => {
+    lightColor = lightColorInput.value;
+    lightTds.forEach(td => {
+	td.style.background = lightColor;
+    });
+};
+
+
+const darkColorTd = document.createElement("td");
+const darkColorInput = document.createElement("input");
+darkColorInput.type = "color";
+darkColorInput.value = darkColor;
+darkColorTd.append(darkColorInput);
+darkColorInput.oninput = () => {
+    darkColor = darkColorInput.value;
+    darkTds.forEach(td => {
+	td.style.background = darkColor;
+    });
+};
+
+const refreshTd = document.createElement("td");
+const refreshButton = document.createElement("input");
+refreshButton.type = "button";
+refreshButton.value = "Refresh Colors";
+refreshButton.onclick = () => {
+    setDisplays(textInput.value);
+};
+refreshTd.append(refreshButton);
+
+topRow.append(textTd, lightColorTd, darkColorTd, refreshTd);
+
+
+const randomColorRow = document.createElement("tr");
+const randomColorLabel = document.createElement("td");
+randomColorLabel.append("randomRGBColor");
+const randomColorLight = document.createElement("td");
+randomColorLight.style.background = lightColor;
+lightTds.push(randomColorLight);
+const randomColorDark = document.createElement("td");
+randomColorDark.style.background = darkColor;
+darkTds.push(randomColorDark);
+function setRandomColorDisplay(text) {
+    randomColorLight.innerHTML = "";
+    randomColorDark.innerHTML = "";
+    const p = makeColorFnP(text, randomRGBColor, "");
+    randomColorLight.append(p.cloneNode(true));
+    randomColorDark.append(p.cloneNode(true));
+    
+}
+randomColorRow.append(randomColorLabel, randomColorLight, randomColorDark);
+
+const randomDarkColorRow = document.createElement("tr");
+const randomDarkColorLabel = document.createElement("td");
+randomDarkColorLabel.append("randomDarkRGBColor");
+const randomDarkColorLight = document.createElement("td");
+randomDarkColorLight.style.background = lightColor;
+lightTds.push(randomDarkColorLight);
+const randomDarkColorDark = document.createElement("td");
+randomDarkColorDark.style.background = darkColor;
+darkTds.push(randomDarkColorDark);
+const darkCutoffInputTd = document.createElement("td");
+const darkCutoffInput = document.createElement("input");
+darkCutoffInput.type = "range";
+darkCutoffInput.min = 0;
+darkCutoffInput.max = 1;
+darkCutoffInput.step = 0.01;
+darkCutoffInput.value = 0.3;
+darkCutoffInput.oninput = () => {
+    setRandomDarkColorDisplay(textInput.value);
+};
+darkCutoffInputTd.append("cutoff: ", darkCutoffInput);
+
+function setRandomDarkColorDisplay(text) {
+    randomDarkColorLight.innerHTML = "";
+    randomDarkColorDark.innerHTML = "";
+    const p = makeColorFnP(text, () => randomDarkRGBColor(darkCutoffInput.value), "");
+    randomDarkColorLight.append(p.cloneNode(true));
+    randomDarkColorDark.append(p.cloneNode(true));
+    
+}
+randomDarkColorRow.append(randomDarkColorLabel, randomDarkColorLight, randomDarkColorDark, darkCutoffInputTd);
+
+const randomLightColorRow = document.createElement("tr");
+const randomLightColorLabel = document.createElement("td");
+randomLightColorLabel.append("randomLightRGBColor");
+const randomLightColorLight = document.createElement("td");
+randomLightColorLight.style.background = lightColor;
+lightTds.push(randomLightColorLight);
+const randomLightColorDark = document.createElement("td");
+randomLightColorDark.style.background = darkColor;
+darkTds.push(randomLightColorDark);
+const lightCutoffInputTd = document.createElement("td");
+const lightCutoffInput = document.createElement("input");
+lightCutoffInput.type = "range";
+lightCutoffInput.min = 0;
+lightCutoffInput.max = 1;
+lightCutoffInput.step = 0.01;
+lightCutoffInput.value = 0.7;
+lightCutoffInput.oninput = () => {
+    setRandomLightColorDisplay(textInput.value);
+};
+lightCutoffInputTd.append("cutoff: ", lightCutoffInput);
+
+function setRandomLightColorDisplay(text) {
+    randomLightColorLight.innerHTML = "";
+    randomLightColorDark.innerHTML = "";
+    const p = makeColorFnP(text, () => randomLightRGBColor(lightCutoffInput.value), "");
+    randomLightColorLight.append(p.cloneNode(true));
+    randomLightColorDark.append(p.cloneNode(true));
+    
+}
+randomLightColorRow.append(randomLightColorLabel, randomLightColorLight, randomLightColorDark, lightCutoffInputTd);
+
+
+const randomLimitedColorRow = document.createElement("tr");
+const randomLimitedColorLabel = document.createElement("td");
+randomLimitedColorLabel.append("randomLimitedRGBColor");
+const randomLimitedColorLight = document.createElement("td");
+randomLimitedColorLight.style.background = lightColor;
+lightTds.push(randomLimitedColorLight);
+const randomLimitedColorDark = document.createElement("td");
+randomLimitedColorDark.style.background = darkColor;
+darkTds.push(randomLimitedColorDark);
+const limitedCutoffInputTd = document.createElement("td");
+const limitedCutoffInput = document.createElement("input");
+limitedCutoffInput.type = "range";
+limitedCutoffInput.min = 0;
+limitedCutoffInput.max = 1;
+limitedCutoffInput.step = 0.01;
+limitedCutoffInput.value = 0.7;
+limitedCutoffInput.oninput = () => {
+    setRandomLimitedColorDisplay(textInput.value);
+};
+limitedCutoffInputTd.append("cutoff: ", limitedCutoffInput);
+
+function setRandomLimitedColorDisplay(text) {
+    randomLimitedColorLight.innerHTML = "";
+    randomLimitedColorDark.innerHTML = "";
+    const p = makeColorFnP(text, () => randomLimitedRGBColor(limitedCutoffInput.value), "");
+    randomLimitedColorLight.append(p.cloneNode(true));
+    randomLimitedColorDark.append(p.cloneNode(true));
+    
+}
+randomLimitedColorRow.append(randomLimitedColorLabel, randomLimitedColorLight, randomLimitedColorDark, limitedCutoffInputTd);
+
+const randomHSLColorRow = document.createElement("tr");
+const randomHSLColorLabel = document.createElement("td");
+randomHSLColorLabel.append("randomHSLColor");
+const randomHSLColorLight = document.createElement("td");
+randomHSLColorLight.style.background = lightColor;
+lightTds.push(randomHSLColorLight);
+const randomHSLColorDark = document.createElement("td");
+randomHSLColorDark.style.background = darkColor;
+darkTds.push(randomHSLColorDark);
+
+const HSLSaturationInputTd = document.createElement("td");
+const HSLSaturationInput = document.createElement("input");
+HSLSaturationInput.type = "range";
+HSLSaturationInput.min = 0;
+HSLSaturationInput.max = 100;
+HSLSaturationInput.step = 1;
+HSLSaturationInput.value = 100;
+HSLSaturationInput.oninput = () => {
+    setRandomHSLColorDisplay(textInput.value);
+}
+HSLSaturationInputTd.append("saturation: ", HSLSaturationInput);
+
+const HSLLightnessInputTd = document.createElement("td");
+const HSLLightnessInput = document.createElement("input");
+HSLLightnessInput.type = "range";
+HSLLightnessInput.min = 0;
+HSLLightnessInput.max = 100;
+HSLLightnessInput.step = 1;
+HSLLightnessInput.value = 50;
+HSLLightnessInput.oninput = () => {
+    setRandomHSLColorDisplay(textInput.value);
+};
+HSLLightnessInputTd.append("lightness: ", HSLLightnessInput);
+
+function setRandomHSLColorDisplay(text) {
+    randomHSLColorLight.innerHTML = "";
+    randomHSLColorDark.innerHTML = "";
+    const p = makeColorFnP(text, () => randomHSLColor(HSLSaturationInput.value, HSLLightnessInput.value), "");
+    randomHSLColorLight.append(p.cloneNode(true));
+    randomHSLColorDark.append(p.cloneNode(true));
+    
+}
+randomHSLColorRow.append(randomHSLColorLabel, randomHSLColorLight, randomHSLColorDark, HSLSaturationInputTd, HSLLightnessInputTd);
+
+
+
+table.append(topRow,
+	     randomColorRow,
+	     randomDarkColorRow,
+	     randomLightColorRow,
+	     randomLimitedColorRow,
+	     randomHSLColorRow);
+
+document.body.append(table);
+
+function setDisplays(text) {
+    setRandomColorDisplay(text);
+    setRandomDarkColorDisplay(text);
+    setRandomLightColorDisplay(text);
+    setRandomLimitedColorDisplay(text);
+    setRandomHSLColorDisplay(text);
+    
+}
+setDisplays("Jungle Pedantics");
+
+
+
+      
+    </script>
+    
+  </body>
+
+  
+  
+</html>

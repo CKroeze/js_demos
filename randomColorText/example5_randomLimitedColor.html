@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Example4: Random Limited Color</title>
+     
+  </head>
+  
+  <body>
+    
+    <script>
+
+      function makeColorSpan(text, color) {
+	    const span = document.createElement("span");
+	    span.append(text);
+	    span.style.color = color;
+	    return span;
+	}
+      
+	function makeColorFnP(text, colorFn, splitOn = " ") {
+	    //this function will be more versatile
+	    //colorFn is any function that returns a color
+
+	    const p = document.createElement('p');
+
+	    text.split(splitOn).forEach(textSegment => {
+
+	        //use our old colored span function, but for the color
+	        //pass the result of calling the colorFn
+	        p.append(makeColorSpan(textSegment, colorFn()), splitOn);
+	
+	    });
+
+	    return p;
+	
+      }
+
+      function randomizeArray(a) {
+	    //duplicate array so original is not modified
+	    a = a.slice();
+
+	    //for each element of the array, starting at the end
+	    //swap element with a random earlier element in the array
+	    for (let i = a.length - 1; i > 0; i--) {
+	
+	        //j = random array index <= i
+	        const j = Math.floor(Math.random() * (i + 1));
+
+		//swap a[i] and a[j] in place		      
+		[a[i], a[j]] = [a[j], a[i]];
+
+	    }
+	    return a;
+	}
+
+	function randomLimitedRGBColor(cutoff = 0.8) {
+	    //limit total rgb values to (cutoff * 3 * 255)
+	    //distribute total randomly between r, g, and b
+	    //this allows limiting overall brightness
+	    //without the muddying effect of limiting all 3 values to the same small range
+
+	    let total = 255*3 * cutoff; 
+
+	    //set first value to a random value between 0 and whichever is smaller, 255, or the total
+	    let first =  Math.min(255, total) * Math.random();
+
+	    //decrease total by amount assigned to first
+	    total -= first;
+
+	    //do the same for the second value with the remaining total
+	    let second = Math.min(255, total) * Math.random();
+	    total -= second;
+
+            let third = 0;
+					    
+	    if(total > 255) {
+                //set third value equal to max of 255
+                third = 255;
+            
+                let remainder = total - third;
+                
+                if(second + remainder > 255) { 
+	            //set second to 255 
+	            //reduce remainder by the amount added to second
+                    remainder -= 255 - second;
+                    second = 255;
+	            //add the rest to first
+                    first += remainder;
+	  
+                 }else {
+                    //otherwise just add the remainder to second
+	            second += remainder;
+        
+	         }
+	      }else {
+	         // otherwise if remaining total is less than 255 just assign
+	         // it to third
+	         third = total;
+	      }
+
+	      //randomize order of values to eliminate tendency of first value to be larger, etc..
+	      const rgb = randomizeArray([first, second, third]);
+	
+	      return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
+	
+	  }
+
+	const limitedColorText = makeColorFnP("Jungle Pedantics", () => randomLimitedRGBColor(0.8), "");
+	
+      document.body.append(limitedColorText);
+
+      
+    </script>
+    
+  </body>
+
+  
+  
+</html>
