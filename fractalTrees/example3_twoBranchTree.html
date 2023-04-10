@@ -1,0 +1,307 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Example 3: Two Branch Tree</title>
+     
+  </head>
+  
+  <body>
+
+    <canvas id="treeCanvas"></canvas><br>
+    
+    Current Generation: <span id="currentGenerationSpan"></span><br>
+    Generation Computation Time: <span id="timeSpan"></span><br>
+    Generation Branches: <span id="generationBranchesSpan"></span><br>
+    Total Branches: <span id="totalBranchesSpan"></span><br>
+
+    <div style="height:2em;">
+      <div id="buttonsDiv">
+	<button id="growButton">Grow</button><button id="resetButton">Reset</button>
+      </div>
+      <span id="growingSpan">Growing...</span>
+    </div>
+    
+    <table>
+      
+      <tr>
+	<th>Left Branch</th><th>Right Branch</th>
+      </tr>
+      
+      <tr>
+	<td>Radians: <input id="leftRadiansRange"
+			    type="range" step="0.01"><span id="leftRadiansSpan"></td>
+	<td>Radians: <input id="rightRadiansRange" type="range" step="0.01"><span id="rightRadiansSpan"></span></td>
+      </tr>
+      
+      <tr>
+	<td>Length Scale: <input id="leftLengthScaleRange" type="range"
+				 min="0" max="2"
+				 step="0.01"><span id="leftLengthScaleSpan"></span></td>
+	<td>Length Scale: <input id="rightLengthScaleRange" type="range"
+				 min="0" max="2" step="0.01"><span id="rightLengthScaleSpan"></span></td>
+      </tr>
+
+      <tr>
+	<td>Width Scale: <input id="leftWidthScaleRange" type="range"
+				min="0" max="2"
+				step="0.01"><span id="leftWidthScaleSpan"></span></td>
+	<td>Width Scale: <input id="rightWidthScaleRange" type="range"
+				min="0" max="2" step="0.01"><span id="rightWidthScaleSpan"></span></td>
+      </tr>
+
+    </table>
+
+    
+    <script>
+
+//////generalized function///////
+      
+function drawLine(ctx, x1, y1, x2, y2, lineWidth = 2, color = "black") {
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1,);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+}
+
+
+/////page variables///////      
+
+const canvasWidth = 400;
+const canvasHeight = 400;
+
+const rootLength = 100;
+const rootWidth = 10;
+
+let leftRadians = -Math.PI/4;
+let leftLengthScale = 0.67;
+let leftWidthScale = 0.67;
+
+let rightRadians = Math.PI/6;
+let rightLengthScale = 0.67;
+let rightWidthScale = 0.67;
+
+const rootBranch = {begin: {x: canvasWidth/2,
+                                            y: canvasHeight},
+                                end: {x: canvasWidth/2,
+                                         y: canvasHeight - rootLength},
+                                length: rootLength,
+                                width: rootWidth,
+                                radians: 1.5*Math.PI};
+
+let branches = [rootBranch];
+let freshBranches = [rootBranch];
+
+let generations = 0;
+
+
+
+
+////html elements//////
+
+const canvas = document.getElementById("treeCanvas");
+canvas.width = canvasWidth;
+canvas.height = canvasHeight;
+const ctx = canvas.getContext("2d");
+
+const leftRadiansRange = document.getElementById("leftRadiansRange");
+leftRadiansRange.min = -Math.PI/2;
+leftRadiansRange.max = 0;
+leftRadiansRange.value = leftRadians;
+const leftRadiansSpan = document.getElementById("leftRadiansSpan");
+leftRadiansSpan.innerHTML = leftRadians.toFixed(3);
+leftRadiansRange.oninput = () => {
+    leftRadians = Number(leftRadiansRange.value);
+    leftRadiansSpan.innerHTML = leftRadians.toFixed(3);
+    regrow();
+};
+
+const leftLengthScaleRange = document.getElementById("leftLengthScaleRange");
+const leftLengthScaleSpan = document.getElementById("leftLengthScaleSpan");
+leftLengthScaleSpan.innerHTML = leftLengthScale;
+leftLengthScaleRange.oninput = () => {
+    leftLengthScale = Number(leftLengthScaleRange.value);
+    leftLengthScaleSpan.innerHTML = leftLengthScale;
+    regrow();
+};
+
+const leftWidthScaleRange = document.getElementById("leftWidthScaleRange");
+const leftWidthScaleSpan = document.getElementById("leftWidthScaleSpan");
+leftWidthScaleSpan.innerHTML = leftWidthScale;
+leftWidthScaleRange.oninput = () => {
+    leftWidthScale = Number(leftWidthScaleRange.value);
+    leftWidthScaleSpan.innerHTML = leftWidthScale;
+    regrow();
+};
+
+
+const rightRadiansSpan = document.getElementById("rightRadiansSpan");
+rightRadiansSpan.innerHTML = rightRadians.toFixed(3);
+rightRadiansRange.oninput = () => {
+    rightRadians = Number(rightRadiansRange.value);
+    rightRadiansSpan.innerHTML = rightRadians.toFixed(3);
+    regrow();
+};
+
+const rightLengthScaleRange = document.getElementById("rightLengthScaleRange");
+const rightLengthScaleSpan = document.getElementById("rightLengthScaleSpan");
+rightLengthScaleSpan.innerHTML = rightLengthScale;
+rightLengthScaleRange.oninput = () => {
+    rightLengthScale = Number(rightLengthScaleRange.value);
+    rightLengthScaleSpan.innerHTML = rightLengthScale;
+    regrow();
+};
+
+const rightWidthScaleRange = document.getElementById("rightWidthScaleRange");
+const rightWidthScaleSpan = document.getElementById("rightWidthScaleSpan");
+rightWidthScaleSpan.innerHTML = rightWidthScale;
+rightWidthScaleRange.oninput = () => {
+    rightWidthScale = Number(rightWidthScaleRange.value);
+    rightWidthScaleSpan.innerHTML = rightWidthScale;
+    regrow();
+};
+
+
+const currentGenerationSpan = document.getElementById("currentGenerationSpan");
+const timeSpan = document.getElementById("timeSpan");
+const generationBranchesSpan = document.getElementById("generationBranchesSpan");
+const totalBranchesSpan = document.getElementById("totalBranchesSpan");
+
+const growButton = document.getElementById("growButton");
+growButton.onclick = async () => {
+    buttonsDiv.style.display = "none";
+    growingSpan.style.display = "inline"
+
+    await new Promise(r => setTimeout(r, 25));
+    //delay allows html elements to hide and display before beginning
+    //to grow branches 
+        
+    grow();
+    draw();
+
+    buttonsDiv.style.display = 'block';
+    growingSpan.style.display = "none"
+       
+};
+
+const resetButton = document.getElementById("resetButton");
+resetButton.onclick =async () => {
+        
+    branches = [rootBranch];
+    freshBranches = [rootBranch];
+    generations = 0;
+    grow();
+    draw();
+
+};
+
+const buttonsDiv = document.getElementById("buttonsDiv");
+const growingSpan = document.getElementById("growingSpan");
+growingSpan.style.display = "none";
+
+
+
+/////page specific functions/////////
+
+function draw() {
+
+    ctx.fillStyle = "lightBlue";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    branches.forEach(branch => {
+                drawLine(ctx,
+                     branch.begin.x,
+                     branch.begin.y,
+                     branch.end.x,
+                     branch.end.y,
+                     branch.width);
+    });
+}
+
+
+function grow() {
+
+    generations++;
+    const newFreshBranches = [];
+    const start = performance.now(); 
+
+
+    freshBranches.forEach(branch => {
+
+            const leftBranchLength = branch.length * leftLengthScale;
+            const leftBranchWidth = branch.width * leftWidthScale;
+            
+            const leftBranch = {begin: branch.end,
+                                           end: {},
+                                           length: leftBranchLength,
+                                           width: leftBranchWidth,
+                                           radians: branch.radians + leftRadians};
+            
+            leftBranch.end.x = branch.end.x + Math.cos(leftBranch.radians) * leftBranchLength;
+            leftBranch.end.y = branch.end.y + Math.sin(leftBranch.radians) * leftBranchLength;
+
+            branches.push(leftBranch);
+            newFreshBranches.push(leftBranch);
+
+
+            const rightBranchLength = branch.length * rightLengthScale;
+            const rightBranchWidth = branch.width * rightWidthScale;
+            
+            const rightBranch = {begin: branch.end,
+                                             end: {},
+                                             length: rightBranchLength,
+                                             width: rightBranchWidth,
+                                             radians: branch.radians + rightRadians};
+            
+            rightBranch.end.x = branch.end.x + Math.cos(rightBranch.radians) * rightBranchLength;
+            rightBranch.end.y = branch.end.y + Math.sin(rightBranch.radians) * rightBranchLength;
+
+            branches.push(rightBranch);
+            newFreshBranches.push(rightBranch);
+            
+        });
+
+        const end = performance.now();
+        freshBranches = newFreshBranches;
+
+        currentGenerationSpan.innerHTML = generations;
+        timeSpan.innerHTML = (end - start).toFixed(4) + "ms";
+        generationBranchesSpan.innerHTML = freshBranches.length;
+        totalBranchesSpan.innerHTML = branches.length;
+
+}
+
+async function regrow() {
+
+    buttonsDiv.style.display = "none";
+    growingSpan.style.display = "inline"
+
+    await new Promise(r => setTimeout(r, 25));
+        
+    const gen = generations;
+    branches = [rootBranch];
+    freshBranches = [rootBranch];
+    generations = 0;
+
+    while(generations < gen) grow();
+		    
+    draw();
+			
+    buttonsDiv.style.display = 'block';
+    growingSpan.style.display = "none"
+
+}
+
+grow();
+draw();
+
+			
+    </script>
+  </body>
+</html>

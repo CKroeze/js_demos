@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Example 1: Canvas Lines</title>
+     
+  </head>
+  
+  <body>
+
+    
+    <script>
+      
+const canvas = document.createElement("canvas");
+document.body.append(canvas);
+const ctx = canvas.getContext("2d");
+
+//set canvas size
+canvas.width = 200;
+canvas.height = 200;
+
+
+//fill canvas with a background color
+ctx.fillStyle = "lightBlue";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+
+//draw horizontal line
+ctx.strokeStyle = "green";
+ctx.lineWidth = 8;
+ctx.beginPath();
+ctx.moveTo(0, 100);
+ctx.lineTo(200, 100);
+ctx.stroke();
+
+//draw vertical line
+ctx.strokeStyle = "red";
+ctx.lineWidth = 4;
+ctx.beginPath();
+ctx.moveTo(100, 0);
+ctx.lineTo(100, 200);
+ctx.stroke();
+
+      
+    
+    </script>
+    
+  </body>
+
+  
+  
+</html>
