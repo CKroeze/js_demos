@@ -17,10 +17,13 @@
     Total Branches: <span id="totalBranchesSpan"></span><br>
 
     <div style="height:2em;">
+      
       <div id="buttonsDiv">
 	<button id="growButton">Grow</button><button id="resetButton">Reset</button>
       </div>
-      <span id="growingSpan">Growing...</span>
+      
+      <div id="growingDiv">Growing...</div>
+      
     </div>
     
     <table>
@@ -176,7 +179,7 @@ const totalBranchesSpan = document.getElementById("totalBranchesSpan");
 const growButton = document.getElementById("growButton");
 growButton.onclick = async () => {
     buttonsDiv.style.display = "none";
-    growingSpan.style.display = "inline"
+    growingDiv.style.display = "block"
 
     await new Promise(r => setTimeout(r, 25));
     //delay allows html elements to hide and display before beginning
@@ -186,7 +189,7 @@ growButton.onclick = async () => {
     draw();
 
     buttonsDiv.style.display = 'block';
-    growingSpan.style.display = "none"
+    growingDiv.style.display = "none"
        
 };
 
@@ -202,8 +205,8 @@ resetButton.onclick =async () => {
 };
 
 const buttonsDiv = document.getElementById("buttonsDiv");
-const growingSpan = document.getElementById("growingSpan");
-growingSpan.style.display = "none";
+const growingDiv = document.getElementById("growingDiv");
+growingDiv.style.display = "none";
 
 
 
@@ -280,7 +283,7 @@ function grow() {
 async function regrow() {
 
     buttonsDiv.style.display = "none";
-    growingSpan.style.display = "inline"
+    growingDiv.style.display = "block"
 
     await new Promise(r => setTimeout(r, 25));
         
@@ -294,7 +297,7 @@ async function regrow() {
     draw();
 			
     buttonsDiv.style.display = 'block';
-    growingSpan.style.display = "none"
+    growingDiv.style.display = "none"
 
 }
 

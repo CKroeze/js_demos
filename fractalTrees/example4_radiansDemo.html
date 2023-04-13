@@ -1,0 +1,148 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Example 4: Radians Demo</title>
+     
+  </head>
+  
+  <body>
+
+    <canvas id="radiansCanvas"></canvas><br>
+    <input id="radiansRange" type="range"><br>
+    radians: <span id="radiansSpan"></span>
+    
+    
+    <script>
+
+
+
+function drawLine(ctx, x1, y1, x2, y2, lineWidth = 2, color = "black") {
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1,);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+}
+
+
+function drawCenteredText(ctx, text, x, y, color = "black", fontSize = 24, font = "arial") {
+
+    ctx.fillStyle = color;
+    ctx.font = "normal " + fontSize.toString() + "px " + font;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, x, y);
+    
+}
+
+
+
+const canvasSize = 200;
+
+const centerX = canvasSize / 2;
+const centerY = canvasSize / 2;
+
+const textMargin = 15;
+const axisMargin = 25;
+const lineLength = 65;
+const curveWidth = 4;
+const startLineWidth = 8;
+const radiansLineWidth = 4;
+
+const curveRadius = 30;
+const centerRadius = 4;
+
+const curveColor = "black";
+const centerColor = "black";
+const startLineColor = "red";
+const radiansLineColor = "blue";
+const axisColor = "black";
+const textColor = "black";
+
+const fontSize = 18;
+
+let radians = Math.PI/2;
+
+
+
+const canvas = document.getElementById("radiansCanvas");
+canvas.width = canvasSize;
+canvas.height = canvasSize;
+const ctx = canvas.getContext("2d");
+
+const range = document.getElementById("radiansRange")
+range.min = -2*Math.PI;
+    range.max = 2*Math.PI;
+    range.step = 0.001;
+    range.value = radians;
+    range.oninput = () => {
+        radians = Number(range.value);
+        radiansSpan.innerHTML = radians.toFixed(3);
+        draw();
+        
+};
+const radiansSpan = document.getElementById("radiansSpan");
+radiansSpan.innerHTML = radians.toFixed(3);
+
+
+
+
+function draw() {
+
+    //clear the canvas
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    //draw Y axis
+    drawLine(ctx, centerX, axisMargin, centerX, canvasSize - axisMargin);
+    drawCenteredText(ctx, "-Y", centerX, textMargin, textColor, fontSize);
+    drawCenteredText(ctx, "Y", centerX, canvasSize - textMargin, textColor, fontSize);
+
+    //draw X axis
+    drawLine(ctx, axisMargin, centerY, canvasSize - axisMargin, centerY);
+    drawCenteredText(ctx, "-X", textMargin, centerY, textColor, fontSize);
+    drawCenteredText(ctx, "X", canvasSize - textMargin, centerX, textColor, fontSize);
+
+    //draw curve connecting angle lines
+    ctx.strokeStyle = curveColor;
+    ctx.lineWidth = curveWidth;
+    ctx.beginPath();
+    if(radians >= 0) {
+        ctx.arc(centerX, centerY, curveRadius, 0, radians);
+    }else {
+        let reverseRadians = 2*Math.PI + radians;
+        if(reverseRadians <= 0) reverseRadians = 2*Math.PI;
+            
+        ctx.arc(centerX, centerY, curveRadius, 0, reverseRadians, true);
+    }
+    ctx.stroke();
+
+    //draw line at 0 radians from origin
+    const x1 = lineLength * Math.cos(0) + centerX;
+    const y1 = lineLength * Math.sin(0) + centerY;
+    drawLine(ctx, centerX, centerY, x1, y1, startLineWidth, startLineColor);
+
+    //draw line at current radians from origin
+    const x2 = lineLength * Math.cos(radians) + centerX;
+    const y2 = lineLength * Math.sin(radians) + centerY;			     
+    drawLine(ctx, centerX, centerY, x2, y2, radiansLineWidth, radiansLineColor);
+
+    //draw dot at origin
+    ctx.fillStyle = centerColor;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, centerRadius, 0, 2*Math.PI);
+    ctx.fill();
+
+
+}
+draw();
+
+			     
+    </script>
+  </body>
+</html>
