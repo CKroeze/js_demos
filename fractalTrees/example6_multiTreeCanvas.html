@@ -3,37 +3,36 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    <title>Example 5: Multi Branch Tree</title>
+    <title>Example 6: Multi Tree Canvas</title>
      
   </head>
   
   <body>
 
-    <canvas id="treeCanvas"></canvas><br>
+      <canvas id="treeCanvas"></canvas><br>
     
-    Current Generation: <span id="currentGenerationSpan"></span><br>
-    Generation Computation Time: <span id="timeSpan"></span><br>
-    Generation Branches: <span id="generationBranchesSpan"></span><br>
-    Total Branches: <span id="totalBranchesSpan"></span><br>
 
-    <div style="height:2em;">
-      
-      <div id="buttonsDiv">
-	<button id="growButton">Grow</button><button id="resetButton">Reset</button><button id="newInstructionsButton">New Instructions</button>
-      </div>
-      
-      <div id="growingDiv">Growing...</div>
-      
-    </div>
-
-    instructions:
-    <div id="instructionsDiv"></div>
+    trees:
+    <div id="treesDiv"></div>
 
     
     <script>
 
-//////generalized functions///////
-      
+//////general functions///////
+
+function randomColor(){
+    //                                      R G B
+    //css hex rgb format is "#FFFFFF"
+    //generate a random value between 0 and 255
+    //convert to hex string
+    //pad hex string with a "0" on the left if it is only one digit
+  
+    return "#"
+        + Math.floor((Math.random() * 255)).toString(16).padStart(2,"0")
+        + Math.floor((Math.random() * 255)).toString(16).padStart(2,"0")
+        + Math.floor((Math.random() * 255)).toString(16).padStart(2,"0");
+}
+
 function drawLine(ctx, x1, y1, x2, y2, lineWidth = 2, color = "black") {
 
     ctx.strokeStyle = color;
@@ -76,9 +75,89 @@ function makeRandomInstructions(min=2, max=5) {
 }
 
 
+function generateBranches(instructions, generations) {
 
+    const branches = [];
+
+    const rootLength = 100;
+    const rootWidth = 10;
+    const rootBranch = {begin: {x: 0,
+                                                y: 0},
+                                    end: {x: 0,
+                                             y: -rootLength},
+                                    length: rootLength,
+                                    width: rootWidth,
+                                    radians: 1.5*Math.PI};
+
+    branches.push(rootBranch);
+
+    let freshBranches = [rootBranch];
+
+    for(let i = 0; i < generations; i++) {
+        
+        const newFreshBranches = [];
+
+        freshBranches.forEach(branch => {
+
+            instructions.forEach(instruction => {
+
+                let {radians, lengthScale, widthScale, probability} = instruction;
+                
+                if(Math.random() < probability) {
+
+                    const length = branch.length * lengthScale;
+                    const width = branch.width * widthScale;
+                    
+                    const newBranch = {begin: branch.end,
+                                                    end: {},
+                                                    length,
+                                                    width,
+                                                    radians: branch.radians + radians};
+                    newBranch.end.x = branch.end.x + Math.cos(newBranch.radians) * length;
+                    newBranch.end.y = branch.end.y + Math.sin(newBranch.radians) * length;
+
+                    branches.push(newBranch);
+                    newFreshBranches.push(newBranch);
+                    
+                }
+            
+            });
+        });
+
+        freshBranches = newFreshBranches;
+        
+    }
+    
+    return branches;
+}
+
+
+
+function drawTree(ctx, branches, x, y, rotation, scale, color) {
+
+    ctx.save();
+    
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.scale(scale, scale);
+
+    branches.forEach(branch => {
+        drawLine(ctx,
+                 branch.begin.x,
+                 branch.begin.y,
+                 branch.end.x,
+                 branch.end.y,
+                 branch.width,
+                 color);
+    });
+
+
+    ctx.restore();
+}
+
+
+				   
 function makeInstructionWidget() {
-
     
     const initialValue = makeRandomInstruction();
     let onchange = undefined;
@@ -134,7 +213,7 @@ function makeInstructionWidget() {
     probabilityInput.min = 0;
     probabilityInput.max = 1;
     probabilityInput.step = 0.01;
-    probabilityInput.value = initialValue.probability;
+    probabilityInput.value = initialValue.probability.toFixed(2);
     probabilityInput.oninput = () => {
         probabilitySpan.innerHTML = Number(probabilityInput.value).toFixed(2);
         if(onchange) onchange();
@@ -145,16 +224,16 @@ function makeInstructionWidget() {
     probabilitySpan.innerHTML = initialValue.probability.toFixed(2);
 
     div.append("radians: ", radiansInput, radiansSpan, document.createElement("br"),
-               "length scale: ", lengthScaleInput, lengthScaleSpan, document.createElement("br"),
-               "width scale: ", widthScaleInput, widthScaleSpan, document.createElement("br"),
-               "probability: ", probabilityInput, probabilitySpan);
+                      "length scale: ", lengthScaleInput, lengthScaleSpan, document.createElement("br"),
+                      "width scale: ", widthScaleInput, widthScaleSpan, document.createElement("br"),
+                      "probability: ", probabilityInput, probabilitySpan);
 
     
     const get = () => {
         return {radians: Number(radiansInput.value),
-                lengthScale: Number(lengthScaleInput.value),
-                widthScale: Number(widthScaleInput.value),
-                probability: Number(probabilityInput.value)};
+                   lengthScale: Number(lengthScaleInput.value),
+                   widthScale: Number(widthScaleInput.value),
+                   probability: Number(probabilityInput.value)};
     };
 
     const set = value => {
@@ -165,7 +244,7 @@ function makeInstructionWidget() {
         widthScaleInput.value = value.widthScale;
         widthScaleSpan.innerHTML = widthScaleInput.value;
         probabilityInput.value = value.probability;
-        probabilitySpan.innerHTML = value.probability;
+        probabilitySpan.innerHTML = value.probability.toFixed(2);
     };
 
     const setOnchange = fn => {
@@ -199,7 +278,8 @@ function makeWidgetListBuilder(widgetFn, values = []) {
 
     buttonDiv.append(addWidgetButton);
     
-    div.append(buttonDiv, itemsDiv);
+    div.append(buttonDiv, document.createElement("br"),
+	              itemsDiv);
 
 
     const addWidget = value => {
@@ -208,7 +288,8 @@ function makeWidgetListBuilder(widgetFn, values = []) {
         if(value !== undefined) {
             widget.set(value);
         }
-
+	widget.div.style.marginRight = "1em";
+	  
         if(onchange) {
             widget.setOnchange(() => {
                 onchange(get());
@@ -220,6 +301,7 @@ function makeWidgetListBuilder(widgetFn, values = []) {
         const itemDiv = document.createElement("div");
         itemDiv.style.display = "flex";
 	itemDiv.style.marginBottom = "2em";
+	
         const removeItemButton = document.createElement("button");
         removeItemButton.innerHTML = "X";
         removeItemButton.onclick = () => {
@@ -266,28 +348,253 @@ function makeWidgetListBuilder(widgetFn, values = []) {
 }
 
 
+
+function makeTreeWidgetFn(width, height) {
+
+    return () => {
+        let value = {x: Math.trunc(Math.random() * width),
+                           y: height - Math.trunc(Math.random() * (height/8)),
+                           scale: 0.5 + (0.5*Math.random()),
+                           rotation: (0.05 * Math.PI - 0.1 * Math.PI * Math.random()),
+                           color: randomColor(),
+                           generations: 4,
+                           instructions: makeRandomInstructions()};
+
+        value.branches = generateBranches(value.instructions, value.generations);
+        let onchange;
+
+        const div = document.createElement("div");
+
+       
+        const xRange = document.createElement("input");
+        xRange.type = "range";
+        xRange.min = 0;
+        xRange.max = width;
+        xRange.step = 1;
+        xRange.value = value.x;
+        
+        const xSpan = document.createElement("span");
+        xSpan.innerHTML = value.x;
+        xRange.oninput = () => {
+
+            value.x = Number(xRange.value);
+            xSpan.innerHTML = value.x;
+            if(onchange) onchange(value);
+            
+        };
+
+       
+        const yRange = document.createElement("input");
+        yRange.type = "range";
+        yRange.min = 0;
+        yRange.max = height;
+        yRange.step = 1;
+        yRange.value = value.y;
+       
+        const ySpan = document.createElement("span");
+        ySpan.innerHTML = value.y;
+        yRange.oninput = () => {
+
+            value.y = Number(yRange.value);
+            ySpan.innerHTML = value.y;
+            if(onchange) onchange(value);
+            
+        };
+
+        
+        const scaleRange = document.createElement("input");
+        scaleRange.type = "range";
+        scaleRange.min = 0;
+        scaleRange.max = 2;
+        scaleRange.step = 0.01;
+        scaleRange.value = value.scale;
+        
+        const scaleSpan = document.createElement("span");
+        scaleSpan.innerHTML = value.scale.toFixed(2);
+        scaleRange.oninput = () => {
+
+            value.scale = Number(scaleRange.value);
+            scaleSpan.innerHTML = value.scale.toFixed(2);
+            if(onchange) onchange(value);
+            
+        };
+
+       
+        const rotationRange = document.createElement("input");
+        rotationRange.type = "range";
+        rotationRange.min = -2*Math.PI;
+        rotationRange.max = 2*Math.PI;
+        rotationRange.step = 0.01;
+        rotationRange.value = value.rotation;
+        
+        const rotationSpan = document.createElement("span");
+        rotationSpan.innerHTML = value.rotation.toFixed(2);
+        rotationRange.oninput = () => {
+
+            value.rotation = Number(rotationRange.value);
+            rotationSpan.innerHTML = value.rotation.toFixed(2);
+            if(onchange) onchange(value);
+            
+        };
+
+        
+        const colorInput = document.createElement("input");
+        colorInput.type = "color";
+        colorInput.value = value.color;
+        colorInput.oninput = () => {
+            value.color = colorInput.value;
+            if(onchange) onchange(value);
+        };
+
+        
+        
+        const generationsRange = document.createElement("input");
+        generationsRange.type = "range";
+        generationsRange.min = 0;
+        generationsRange.max = 8;
+        generationsRange.step = 1;
+        generationsRange.value = value.generations;
+        
+        const generationsSpan = document.createElement("span");
+        generationsSpan.innerHTML = value.generations;
+        generationsRange.oninput = () => {
+
+            value.generations = Number(generationsRange.value);
+            generationsSpan.innerHTML = value.generations;
+            value.branches = generateBranches(value.instructions, value.generations);
+            
+            if(onchange) onchange(value);
+            
+        };
+
+        const regenerateButton = document.createElement("button");
+        regenerateButton.classList.add("btn", "btn-warning");
+        regenerateButton.innerHTML = "Regenerate Tree";
+        regenerateButton.onclick = () => {
+            value.branches = generateBranches(value.instructions, value.generations);
+            if(onchange) onchange(value);
+        };
+
+        const instructionsBuilder = makeWidgetListBuilder(makeInstructionWidget,
+                                                          value.instructions);
+        instructionsBuilder.setOnchange(values => {
+            value.instructions = values;
+            value.branches = generateBranches(value.instructions, value.generations);
+            
+            if(onchange) onchange(value);
+        });
+        instructionsBuilder.div.style.display = "none";
+
+        const regenerateTreeButton = document.createElement("button");
+        regenerateTreeButton.innerHTML = "Regenerate Tree";
+        regenerateTreeButton.onclick = () => {
+
+            value.branches = generateBranches(value.instructions, value.generations);
+            if(onchange) onchange(value);
+            
+        };
+
+        const showInstructionsButton = document.createElement("button");
+        showInstructionsButton.innerHTML = "Show Instructions";
+        showInstructionsButton.onclick = () => {
+
+            showInstructionsButton.style.display = "none";
+            hideInstructionsButton.style.display = "inline";
+            instructionsBuilder.div.style.display = "block";
+            
+        };
+        
+        const hideInstructionsButton = document.createElement("button");
+        hideInstructionsButton.innerHTML = "Hide Instructions";
+        hideInstructionsButton.style.display = "none";
+        hideInstructionsButton.onclick = () => {
+
+            showInstructionsButton.style.display = "inline";
+            hideInstructionsButton.style.display = "none";
+            instructionsBuilder.div.style.display = "none";
+            
+        };
+       
+        div.append(regenerateTreeButton, document.createElement("br"),
+	                  "x: ", xRange, xSpan, document.createElement("br"),
+                          "y: ", yRange, ySpan, document.createElement("br"),
+                          "scale: ", scaleRange, document.createElement("br"),
+                          "rotation: ", rotationRange, rotationSpan, document.createElement("br"),
+                          "color: ", colorInput, document.createElement("br"),
+                          "generations: ", generationsRange, generationsSpan, document.createElement("br"),
+                          showInstructionsButton, hideInstructionsButton,
+                          instructionsBuilder.div);
+
+        
+
+
+        const set = newValue => {
+
+            value = newValue;
+
+            xRange.value = value.x;
+            xSpan.innerHTML = Math.round(value.x);
+            
+            yRange.value = value.y;
+            ySpan.innerHTML = Math.round(value.y);
+
+            scaleRange.value = value.scale;
+            scaleSpan.innerHTML = value.scale.toFixed(2);
+
+            rotationRange.value = value.rotation;
+            rotationSpan.innerHTML = value.rotation.toFixed(2);
+
+            colorInput.value = value.color;
+
+            generationsRange.value = value.generations;
+            generationsSpan.innerHTML = value.generations;
+
+            instructionsBuilder.set(value.instructions);
+        };
+
+        const get = () => {
+
+            return value;
+        };
+
+        const setOnchange = fn => {
+
+            onchange = fn;
+	    instructionsBuilder.setOnchange(values => {
+                value.instructions = values;
+                value.branches = generateBranches(value.instructions, value.generations);
+                if(onchange) onchange(value);
+            });
+            
+        };
+
+        return {div, set, get, setOnchange};
+
+    };
+    
+}
+
+
 /////page variables///////      
 
 const canvasWidth = 800;
 const canvasHeight = 400;
 
-const rootLength = 100;
-const rootWidth = 10;
+let trees = [];
 
-const rootBranch = {begin: {x: canvasWidth/2,
-                                            y: canvasHeight},
-                                end: {x: canvasWidth/2,
-                                         y: canvasHeight - rootLength},
-                                length: rootLength,
-                                width: rootWidth,
-                                radians: 1.5*Math.PI};
+const defaultTree = {x: canvasWidth/2,
+                                 y: canvasHeight,
+                                 scale: 1,
+                                 rotation: 0,
+                                 color: "black",
+                                 generations: 4,
+                                 instructions: makeRandomInstructions()};
 
-let branches = [rootBranch];
-let freshBranches = [rootBranch];
-let instructions = makeRandomInstructions();
-let generations = 0;
+defaultTree.branches = generateBranches(defaultTree.instructions, defaultTree.generations);
 
+trees.push(defaultTree);
 
+	  
 ////html elements//////
 
 const canvas = document.getElementById("treeCanvas");
@@ -301,55 +608,17 @@ const timeSpan = document.getElementById("timeSpan");
 const generationBranchesSpan = document.getElementById("generationBranchesSpan");
 const totalBranchesSpan = document.getElementById("totalBranchesSpan");
 
-const growButton = document.getElementById("growButton");
-growButton.onclick = async () => { 
-    buttonsDiv.style.display = "none";
-    growingDiv.style.display = "block"
 
-    await new Promise(r => setTimeout(r, 25));
-    //delay allows html elements to hide and display before beginning
-    //to grow branches 
-        
-    grow();
-    draw();
+const treesBuilder = makeWidgetListBuilder(makeTreeWidgetFn(canvasWidth, canvasHeight), trees);
+treesBuilder.setOnchange(values => {
+          trees  = values;
+	  draw();
+});
+treesBuilder.div.style.overflow = "auto";
+treesBuilder.div.style.height = "200px";
 
-    buttonsDiv.style.display = 'block';
-    growingDiv.style.display = "none"
-       
-};
-
-const resetButton = document.getElementById("resetButton");
-resetButton.onclick = () => {
-        
-    branches = [rootBranch];
-    freshBranches = [rootBranch];
-    generations = 0;
-    grow();
-    draw();
-
-};
-
-const newInstuctionsButton = document.getElementById("newInstructionsButton");
-newInstructionsButton.onclick =  () => {
-
-	instructions = makeRandomInstructions();
-        instructionsBuilder.set(instructions);
-        regrow();
-	
-}
-
-const buttonsDiv = document.getElementById("buttonsDiv");
-const growingDiv = document.getElementById("growingDiv");
-growingDiv.style.display = "none";
-
-
-const instructionsBuilder = makeWidgetListBuilder(makeInstructionWidget, instructions);
-instructionsBuilder.setOnchange(values => {
-                                                          instructions = values;
-                                                          regrow();
-                                                     });
-
-instructionsDiv.append(instructionsBuilder.div);
+	  
+treesDiv.append(treesBuilder.div);
 	
 /////page specific functions/////////
 
@@ -358,84 +627,13 @@ function draw() {
     ctx.fillStyle = "lightBlue";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    branches.forEach(branch => {
-                drawLine(ctx,
-                     branch.begin.x,
-                     branch.begin.y,
-                     branch.end.x,
-                     branch.end.y,
-                     branch.width);
+    trees.forEach(tree => {
+            drawTree(ctx, tree.branches, tree.x, tree.y, tree.rotation, tree.scale, tree.color);
     });
+	  
 }
 
 
-function grow() {
-
-    generations++;
-    const newFreshBranches = [];
-    const start = performance.now(); 
-
-
-    freshBranches.forEach(branch => {
-
-            instructions.forEach(instruction => {
-
-                let {radians, lengthScale, widthScale, probability} = instruction;
-                
-                if(Math.random() < probability) {
-
-                    const length = branch.length * lengthScale;
-                    const width = branch.width * widthScale;
-                    
-                    const newBranch = {begin: branch.end,
-                                                    end: {},
-                                                    length,
-                                                    width,
-                                                    radians: branch.radians + radians};
-                    newBranch.end.x = branch.end.x + Math.cos(newBranch.radians) * length;
-                    newBranch.end.y = branch.end.y + Math.sin(newBranch.radians) * length;
-
-                    branches.push(newBranch);
-                    newFreshBranches.push(newBranch);
-                    
-                }
-            
-            });
-            
-        });
-
-        const end = performance.now();
-        freshBranches = newFreshBranches;
-
-        currentGenerationSpan.innerHTML = generations;
-        timeSpan.innerHTML = (end - start).toFixed(4) + "ms";
-        generationBranchesSpan.innerHTML = freshBranches.length;
-        totalBranchesSpan.innerHTML = branches.length;
-
-}
-
-async function regrow() {
-
-    buttonsDiv.style.display = "none";
-    growingDiv.style.display = "block"
-
-    await new Promise(r => setTimeout(r, 25));
-        
-    const gen = generations;
-    branches = [rootBranch];
-    freshBranches = [rootBranch];
-    generations = 0;
-
-    while(generations < gen) grow();
-		    
-    draw();
-			
-    buttonsDiv.style.display = 'block';
-    growingDiv.style.display = "none"
-
-}
-
-grow();
 draw();
 
 			

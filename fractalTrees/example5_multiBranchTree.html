@@ -32,7 +32,7 @@
     
     <script>
 
-//////generalized functions///////
+//////general functions///////
       
 function drawLine(ctx, x1, y1, x2, y2, lineWidth = 2, color = "black") {
 
@@ -165,7 +165,7 @@ function makeInstructionWidget() {
         widthScaleInput.value = value.widthScale;
         widthScaleSpan.innerHTML = widthScaleInput.value;
         probabilityInput.value = value.probability;
-        probabilitySpan.innerHTML = value.probability;
+        probabilitySpan.innerHTML = value.probability.toFixed(2);
     };
 
     const setOnchange = fn => {
@@ -208,7 +208,8 @@ function makeWidgetListBuilder(widgetFn, values = []) {
         if(value !== undefined) {
             widget.set(value);
         }
-
+	widget.div.style.marginRight = "1em";
+	
         if(onchange) {
             widget.setOnchange(() => {
                 onchange(get());
