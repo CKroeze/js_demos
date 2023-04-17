@@ -48,11 +48,12 @@
 
 	    const p = document.createElement('p');
 
-	    text.split(splitOn).forEach(textSegment => {
+	    text.split(splitOn).forEach((textSegment, i) => {
 
+                if(i) textSegment = splitOn + textSegment;
 	        //use our old colored span function, but for the color
 	        //pass the result of calling the colorFn
-	        p.append(makeColorSpan(textSegment, colorFn()), splitOn);
+	        p.append(makeColorSpan(textSegment, colorFn()));
 	
 	    });
 

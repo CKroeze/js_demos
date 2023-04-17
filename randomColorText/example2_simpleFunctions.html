@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    <title>Example1: Simple Functions</title>
+    <title>Example2: Simple Functions</title>
      
   </head>
   
@@ -38,11 +38,13 @@
 	        //etc...
 	
 	        const color = colors[i % colors.length];
-	        const span = makeColorSpan(textSegment, color);
+	        //add splitOn text back to text segment except for
+	        //first segment when i === 0
+	        if(i) textSegment = splitOn + textSegment; 
 
-	        //add the split character back in or you lose the
-	        //spaces in the sentence
-	        p.append(span, splitOn);
+	        const span = makeColorSpan(textSegment, color);
+	        
+	        p.append(span);
 	
 	    })
 

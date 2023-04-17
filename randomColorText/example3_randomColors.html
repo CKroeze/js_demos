@@ -30,8 +30,9 @@
 	function makeMultiRandomRGBColorP(text, splitOn = " ") {
 	    const p = document.createElement('p');
 
-	    text.split(splitOn).forEach(textSegment => {
-	        p.append(makeRandomRGBColorSpan(textSegment), splitOn)
+            text.split(splitOn).forEach((textSegment, i) => {
+                if(i) textSegment = splitOn + textSegment;
+	        p.append(makeRandomRGBColorSpan(textSegment))
 	    });
 
 	    return p
