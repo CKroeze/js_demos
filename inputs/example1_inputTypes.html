@@ -1,0 +1,189 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Example 1: Input Types</title>
+     
+    <style>
+
+    
+
+      
+      
+    </style>
+
+  </head>
+  
+  <body>
+
+    
+
+    
+    <script>
+    
+   
+
+    const div = document.createElement("div");
+
+    const textInput = document.createElement("input");
+    textInput.value = "some text";
+
+    const numberInput = document.createElement("input");
+    numberInput.type = "number";
+    numberInput.value = 100;
+
+    const rangeInput = document.createElement("input");
+    rangeInput.type = "range";
+    rangeInput.value = 15;
+
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.value = "#00FF00";
+
+    const checkboxInput = document.createElement("input");
+    checkboxInput.type = "checkbox";
+
+    const dateInput = document.createElement("input");
+    dateInput.type = "date";
+
+    const radioInput1 = document.createElement("input");
+    radioInput1.type = "radio";
+    radioInput1.name = "exampleRadio";
+    radioInput1.value = 1;
+    radioInput1.checked = true;
+
+    const radioInput2 = document.createElement("input");
+    radioInput2.type = "radio";
+    radioInput2.name = "exampleRadio";
+    radioInput2.value = 2;
+
+    const radioInput3 = document.createElement("input");
+    radioInput3.type = "radio";
+    radioInput3.name = "exampleRadio";
+    radioInput3.value = 3;
+
+    const radioInputs = [radioInput1,
+                         radioInput2,
+                         radioInput3];
+
+    const select = document.createElement("select");
+    [1,2,3].forEach(i => {
+        const option = document.createElement("option");
+        option.innerHTML = i;
+        select.append(option);
+        
+    });
+    select.value = 1;
+
+    let clicks = 0;
+    const button = document.createElement("button");
+    button.innerHTML = "Click Me";
+    button.onclick = () => {
+        clicks++;
+        showValues();
+    };
+    
+
+    const table = document.createElement("table");
+    
+    const showValues = () => {
+       
+        const values = {
+            text: textInput.value,
+            number: numberInput.value,
+            range: rangeInput.value,
+            color: colorInput.value,
+            checkbox: checkboxInput.checked,
+            date: dateInput.value,
+            radio: radioInputs.find(r => r.checked).value,
+            select: select.value,
+            
+            clicks
+        };
+
+        console.log(values);
+        
+        table.innerHTML = "";
+        const headerTr = document.createElement("tr");
+        const blankTh = document.createElement("th");
+        
+        const valueTh = document.createElement("th");
+        valueTh.innerHTML = "value";
+        
+        const typeTh = document.createElement("th");
+        typeTh.innerHTML = "type";
+        
+        headerTr.append(blankTh, valueTh, typeTh);
+        table.append(headerTr);
+        
+        
+        Object.entries(values).forEach(([key, value]) => {
+
+            const tr = document.createElement("tr");
+
+            const labelTh = document.createElement("th");
+            labelTh.innerHTML = key;
+
+            const valueTd = document.createElement("td");
+            valueTd.innerHTML = value;
+
+            const typeTd = document.createElement("td");
+            typeTd.innerHTML = typeof value;
+
+            tr.append(labelTh, valueTd, typeTd);
+            table.append(tr);
+            
+        });
+        
+        
+        
+        
+    };
+
+    textInput.oninput = showValues;
+    numberInput.oninput = showValues;
+    rangeInput.oninput = showValues;
+    colorInput.oninput = showValues;
+    checkboxInput.oninput = showValues;
+    dateInput.oninput = showValues;
+    radioInput1.oninput = showValues;
+    radioInput2.oninput = showValues;
+    radioInput3.oninput = showValues;
+    select.oninput = showValues;
+
+    
+    function br() {
+        return document.createElement("br");
+    }
+
+
+    div.append("text: ", textInput, br(),
+               "number: ", numberInput, br(),
+               "range: ", rangeInput, br(),
+               "color: ", colorInput, br(),
+               "checkbox: ", checkboxInput, br(),
+               "date: ", dateInput, br(),
+               "radio:", br(),
+               radioInput1, "1", br(),
+               radioInput2, "2", br(),
+               radioInput3, "3", br(),
+               "select:", select, br(),
+               "button:", button, 
+
+               table);
+
+    document.body.append(div);
+
+    showValues();
+
+    
+    
+    
+    </script>
+    
+  </body>
+
+  
+  
+</html>
