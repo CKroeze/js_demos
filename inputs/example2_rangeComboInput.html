@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Example 2: Range Combo Input</title>
+     
+    <style>
+
+    
+
+      
+      
+    </style>
+
+  </head>
+  
+  <body>
+
+    
+
+    
+    <script>
+
+    
+   
+function makeRangeComboInput(min, max, step, value, onchange) {
+
+    const span = document.createElement("span");
+
+    const range = document.createElement("input");
+    range.type = "range";
+    range.min = min;
+    range.max = max;
+    range.step = step;
+    range.value = value;
+    range.oninput = () => {
+
+        const newValue = Number(range.value);
+        value = newValue;
+        input.value = value;
+        
+        if(onchange) onchange(value);
+    };
+    
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = min;
+    input.max = max;
+    input.step = step;
+    input.value = value;
+    
+    const warningSmall = document.createElement("small");
+    warningSmall.innerHTML = "Out of range!";
+    warningSmall.style.color = "red";
+    warningSmall.style.display = "none";
+    
+    input.oninput = () => {
+
+        const newValue = Number(input.value);
+
+        if(!(newValue >= min && newValue <= max)) {
+            warningSmall.style.display = "block";
+        }else {
+            
+            value = newValue;
+            range.value = value;
+            warningSmall.style.display = "none";
+            if(onchange) onchange(value);
+            
+        }
+        
+    };
+    input.onblur = () => {
+
+        const newValue = Number(input.value);
+
+        if(!(newValue >= min && newValue <= max)) {
+            input.value = value;
+            warningSmall.style.display = "none";
+        }
+        
+    };
+    
+
+    span.append(range, input, warningSmall);
+    
+
+    const get = () => {
+        return value;
+    };
+
+    const set = newValue => {
+
+        if(!(newValue >= min && newValue <= max)) {
+            throw new Error("New value is out of range!");
+        }
+
+        value = newValue;
+        range.value = value;
+        input.value = value;
+        warningSmall.style.display = "none";
+        
+    };
+
+    const setOnchange = fn => {
+        onchange = fn;
+    };
+
+    const setDisable = bool => {
+
+        range.disabled = bool;
+        input.disabled = bool;
+        
+    };
+    
+    return {span, get, set, setOnchange, setDisable};
+    
+}
+
+const input = makeRangeComboInput(-1, 1, 0.01, 0, value => {
+    console.log("value = ", value);
+});
+document.body.append(input.span);
+	  
+  
+    
+    </script>
+    
+  </body>
+
+  
+  
+</html>
