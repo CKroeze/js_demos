@@ -1,0 +1,603 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Example 5: Keyboard Synth</title>
+     
+    <style>
+
+    
+
+      
+      
+    </style>
+
+  </head>
+  
+  <body>
+
+    
+
+    
+    <script>
+
+    
+function makeRangeComboInput(min, max, step, value, onchange) {
+
+    const span = document.createElement("span");
+
+    const range = document.createElement("input");
+    range.type = "range";
+    range.min = min;
+    range.max = max;
+    range.step = step;
+    range.value = value;
+    range.oninput = () => {
+
+        const newValue = Number(range.value);
+        value = newValue;
+        input.value = value;
+        
+        if(onchange) onchange(value);
+    };
+    
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = min;
+    input.max = max;
+    input.step = step;
+    input.value = value;
+    
+    const warningSmall = document.createElement("small");
+    warningSmall.innerHTML = "Out of range!";
+    warningSmall.style.color = "red";
+    warningSmall.style.display = "none";
+    
+    input.oninput = () => {
+
+        const newValue = Number(input.value);
+
+        if(!(newValue >= min && newValue <= max)) {
+            warningSmall.style.display = "block";
+        }else {
+            
+            value = newValue;
+            range.value = value;
+            warningSmall.style.display = "none";
+            if(onchange) onchange(value);
+            
+        }
+        
+    };
+    input.onblur = () => {
+        
+        if(!input.value.length) {
+            input.value = 0;
+        }
+        
+        const newValue = Number(input.value);
+        console.log("input.value = ", input.value);
+        console.log("newValue = ", newValue);
+
+        if(!(newValue >= min && newValue <= max)) {
+            input.value = value;
+            warningSmall.style.display = "none";
+        }
+        
+    };
+    
+
+    span.append(range, input, warningSmall);
+    
+
+    const get = () => {
+        return value;
+    };
+
+    const set = newValue => {
+
+        if(!(newValue >= min && newValue <= max)) {
+            throw new Error("New value is out of range!");
+        }
+
+        value = newValue;
+        range.value = value;
+        input.value = value;
+        warningSmall.style.display = "none";
+        
+    };
+
+    const setOnchange = fn => {
+        onchange = fn;
+    };
+
+    const setDisable = bool => {
+
+        range.disabled = bool;
+        input.disabled = bool;
+        
+    };
+    
+    return {span, get, set, setOnchange, setDisable};
+    
+}
+
+function makeWidgetListBuilder(widgetFn, values = []) {
+    //widgetFn returns widget with {div, set, get, setOnchange}
+
+    let onchange;
+    let widgets = [];
+    
+    const div = document.createElement('div');
+
+    const itemsDiv = document.createElement("div");
+    const buttonDiv = document.createElement('div');
+
+    
+    const addWidgetButton = document.createElement("button");
+    addWidgetButton.innerHTML = "Add";
+    addWidgetButton.onclick = () => {
+        addWidget();
+        if(onchange) onchange(get());
+    };
+
+    buttonDiv.append(addWidgetButton);
+    
+    div.append(buttonDiv, itemsDiv);
+
+
+    const addWidget = value => {
+
+        const widget = widgetFn();
+        if(value !== undefined) {
+            widget.set(value);
+        }
+	widget.div.style.marginRight = "1em";
+	
+        if(onchange) {
+            widget.setOnchange(() => {
+                onchange(get());
+            });
+        }
+        widgets.push(widget);
+
+
+        const itemDiv = document.createElement("div");
+        itemDiv.style.display = "flex";
+	itemDiv.style.marginBottom = "2em";
+        const removeItemButton = document.createElement("button");
+        removeItemButton.innerHTML = "X";
+        removeItemButton.onclick = () => {
+
+            const index = Array.from(itemsDiv.children).indexOf(itemDiv);
+            widgets.splice(index, 1);
+            itemDiv.remove();
+
+            if(onchange) onchange(get());
+        };
+
+        itemDiv.append(widget.div, removeItemButton);
+        itemsDiv.append(itemDiv);
+        
+    };
+    values.forEach(value => addWidget(value));
+
+    
+    const get = () => {
+        return widgets.map(w => w.get());
+    };
+
+
+    const set = newValues => {
+
+        widgets = [];
+        itemsDiv.innerHTML = "";
+        
+        newValues.forEach(value => addWidget(value));
+        
+    };
+
+
+    const setOnchange = fn => {
+        onchange = fn;
+	widgets.forEach(w => w.setOnchange(() => onchange(get())));
+    };
+
+    return {div,
+               get,
+               set,
+               setOnchange};
+    
+};
+
+
+	    
+function oscillatorLevelWidget() {
+    let onchange;
+
+    const div = document.createElement("div");
+
+    const input = makeRangeComboInput(0.01, 1, 0.01, 1, value => {
+        if(onchange) onchange(value);
+    });
+
+    div.append("level: ", input.span);
+
+    const setOnchange = fn => { onchange = fn; };
+
+    return { div, get: input.get, set: input.set, setOnchange };
+
+};
+
+function br() {
+    return document.createElement("br");
+}
+
+
+function makeSynth() {
+
+    const audioContext = new AudioContext();
+
+    let oscillatorLevels = [1, 1, 1, 1];
+    let oscillators = [];
+    let frequency = 440; //hz
+    let vibratoSpeed = 4.56; //hz
+    let vibratoCents = 30; //100 cents to a half step in a logarithmic scale
+    let volume = 48;
+    
+    const getVolumeLevel = () => {
+        return 1/(Math.max(1, (60 - volume))*10);
+    };
+
+    const playGainNode = audioContext.createGain();
+    //this gain will be toggled on and off with the play and stop buttons
+    playGainNode.connect(audioContext.destination);
+    playGainNode.gain.value = 0;
+
+    const volumeGainNode = audioContext.createGain();
+    //this is the main gain that controls the volume
+    volumeGainNode.connect(playGainNode);
+    volumeGainNode.gain.value = getVolumeLevel();
+
+    const joinGainNode = audioContext.createGain();
+    //this gain will reduce the level according to the number of oscillators
+    joinGainNode.connect(volumeGainNode);
+    
+    
+    const vibratoOscillator = audioContext.createOscillator();
+    vibratoOscillator.frequency.value = vibratoSpeed;
+    vibratoOscillator.start();
+
+    const vibratoGainNode = audioContext.createGain();
+    vibratoGainNode.gain.value = vibratoCents;
+    vibratoOscillator.connect(vibratoGainNode);
+
+    
+    const setVolume = () => {
+
+        volumeGainNode.gain.exponentialRampToValueAtTime(getVolumeLevel(),
+                                                         audioContext.currentTime + 0.1);
+        
+    };
+
+    const setJoinGain = () => {
+
+        joinGainNode.gain.exponentialRampToValueAtTime(1/Math.max(1, oscillators.length),
+                                                       audioContext.currentTime + 0.01);
+        
+    };
+
+    const addOscillator = () => {
+        
+        const oscillator = audioContext.createOscillator();
+        oscillator.frequency.value = frequency * (oscillators.length + 1);
+        
+        const oscillatorGainNode = audioContext.createGain();
+        oscillatorGainNode.gain.value = 1;
+        
+        oscillator.connect(oscillatorGainNode);
+        oscillatorGainNode.connect(joinGainNode);
+        vibratoGainNode.connect(oscillator.detune);
+        
+        oscillators.push({oscillator, gainNode: oscillatorGainNode});
+
+        oscillator.start();
+        
+        setJoinGain();
+    };
+
+    const removeOscillator = () => {
+
+        const osc = oscillators.pop();
+        vibratoGainNode.disconnect(osc.oscillator.detune);
+        osc.gainNode.disconnect();
+        osc.oscillator.stop();
+
+        setJoinGain();
+        
+    };
+
+    const setOscillatorLevels = () => {
+
+        oscillatorLevels.forEach((level, i) => {
+
+            oscillators[i].gainNode.gain.exponentialRampToValueAtTime(level,
+                                                                      audioContext.currentTime + 0.01);
+            
+        });
+    };
+
+    const setOscillatorFrequencies = () => {
+
+        oscillators.forEach((osc, i) => {
+            oscillators[i].oscillator.frequency.exponentialRampToValueAtTime(frequency*(i+1),
+                                                                             audioContext.currentTime + 0.01);
+        });
+        
+    };
+
+    oscillatorLevels.forEach(addOscillator);
+    setOscillatorLevels();
+    
+
+
+    const div = document.createElement("div");
+
+    const playButton = document.createElement("button");
+    playButton.innerHTML = "Play Synth";
+    playButton.onclick = () => {
+
+        playGainNode.gain.exponentialRampToValueAtTime(1, audioContext.currentTime + 0.01);
+        
+        playButton.style.display = "none";
+        stopButton.style.display = "inline";
+
+        
+    };
+
+    const stopButton = document.createElement("button");
+    stopButton.innerHTML = "Stop";
+    stopButton.style.display = "none";
+    stopButton.onclick = () => {
+
+        playButton.style.display = "inline";
+        stopButton.style.display = "none";
+
+        playGainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.001);
+        
+    };
+
+    const frequencyInput = makeRangeComboInput(55, 3520, 0.01, frequency, value => {
+        frequency = value;
+        setOscillatorFrequencies();
+    });
+
+    const volumeRange = document.createElement("input");
+    volumeRange.type = "range";
+    volumeRange.min = 0;
+    volumeRange.max = 60;
+    volumeRange.value = volume;
+    volumeRange.oninput = () => {
+        volume = Number(volumeRange.value);
+        setVolume();
+    };
+    
+   
+    
+    const vibratoSpeedInput = makeRangeComboInput(1, 24, 0.01, vibratoSpeed, value => {
+        vibratoSpeed = value;
+        vibratoOscillator.frequency.exponentialRampToValueAtTime(vibratoSpeed,
+                                                                 audioContext.currentTime + 0.01);
+    });
+
+
+    const vibratoCentsInput = makeRangeComboInput(1, 100, 1, vibratoCents, value => {
+        vibratoCents = value;
+        vibratoGainNode.gain.exponentialRampToValueAtTime(vibratoCents,
+                                                          audioContext.currentTime + 0.01);
+    });
+
+    
+    const oscillatorLevelsBuilder = makeWidgetListBuilder(oscillatorLevelWidget, oscillatorLevels);
+    oscillatorLevelsBuilder.setOnchange(values => {
+
+        while(values.length > oscillators.length) addOscillator();
+        while(values.length < oscillators.length) removeOscillator();
+        
+        oscillatorLevels = values;
+
+        setOscillatorLevels();
+        
+    });
+
+
+    div.append(playButton, stopButton, br(),
+               "Frequency: ", frequencyInput.span, br(),
+               "Volume: ", volumeRange, br(),
+               "Vibrato Speed: ", vibratoSpeedInput.span, br(),
+               "Vibrato Cents: ", vibratoCentsInput.span, br(),
+               "Oscillator Levels:",
+               oscillatorLevelsBuilder.div);
+
+    const play = freq => {
+
+        frequency = freq;
+	frequencyInput.set(freq);
+        setOscillatorFrequencies();
+        playButton.click();
+        
+    };
+
+    const stop = () => {
+        stopButton.click();
+    };
+
+    return {div, play, stop};
+}
+
+
+function getScaledCanvasPos(canvas, event) {
+
+    //the pixel size of the canvas may be different from its displayed size
+    //in this case we set the width style of the canvas 100% so it will always scale
+    //to fill across the space it has
+    
+    //we need to scale the mouse or touch position to figure out where it is
+    //in relation to the actual size of the shapes we are drawing on the canvas
+    
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;  
+
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
+
+    return [x, y];
+}
+
+const frequencies = [
+    261.63,
+    293.66,
+    329.63,
+    349.23,
+    392,
+    440,
+    493.88,
+    523.25
+];
+
+function makeKeyboardSynth() {
+    
+    const width = 800;
+    const height = 400;
+    const numberOfKeys = 8;
+    const keyWidth = width / numberOfKeys;
+
+    const synth = makeSynth();
+
+    const div = document.createElement("div");
+    
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 400;
+    canvas.style.width = "100%";
+    const ctx = canvas.getContext("2d");
+    const clear = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
+
+
+    const drawKey = index => {
+
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = "12";
+        ctx.strokeRect(keyWidth * index, 0, keyWidth, height);
+        
+    };
+
+    const drawMousemoveKey = index => {
+
+        ctx.fillStyle = "blue";
+        ctx.fillRect(keyWidth * index, 0, keyWidth, height);
+        
+    };
+
+    const drawPlayingKey = index => {
+
+        ctx.fillStyle = "green";
+        ctx.fillRect(keyWidth * index, 0, keyWidth, height);
+        
+    };
+
+    
+
+    let playingIndex = undefined;
+
+    const draw = () => {
+        clear();
+        for(let i = 0; i < numberOfKeys; i++) {
+            if(i === playingIndex) {
+                drawPlayingKey(i);
+            }else {
+                drawKey(i);
+            }
+        }
+    };
+
+    canvas.onmousedown = event => {
+
+        const pos = getScaledCanvasPos(canvas, event);
+        const index = Math.floor(pos[0] / keyWidth);
+        const frequency = frequencies[index];
+        playingIndex = index;
+        synth.play(frequency);
+        
+        draw();
+        
+    };
+
+    canvas.onmouseup = () => {
+
+        synth.stop();
+        playingIndex = undefined;
+        draw();
+        
+    };
+
+    canvas.onmouseleave = () => {
+
+        synth.stop();
+        playingIndex = undefined;
+        draw();
+        
+    };
+
+    canvas.onmousemove = event => {
+
+        const pos = getScaledCanvasPos(canvas, event);
+        const index = Math.floor(pos[0] / keyWidth);
+
+        if(playingIndex !== undefined) {
+
+            if(playingIndex !== index) {
+                const frequency = frequencies[index];
+                playingIndex = index;
+                synth.play(frequency);
+                draw();
+            }
+
+            
+            
+        }else {
+            clear();
+            for(let i = 0; i < numberOfKeys; i++) {
+                if(i === index) {
+                    drawMousemoveKey(i);
+                }else {
+                    drawKey(i);
+                }
+            }
+        }
+    };
+
+    
+    div.append(canvas,
+               synth.div);
+
+    return {div};
+}
+
+const keyboard = makeKeyboardSynth();
+
+    
+document.body.append(keyboard.div);
+	      
+    
+    </script>
+    
+  </body>
+
+  
+  
+</html>

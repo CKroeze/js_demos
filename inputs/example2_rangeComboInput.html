@@ -72,6 +72,9 @@ function makeRangeComboInput(min, max, step, value, onchange) {
         
     };
     input.onblur = () => {
+        if(!input.value.length) {
+            input.value = 0;
+        }
 
         const newValue = Number(input.value);
 
